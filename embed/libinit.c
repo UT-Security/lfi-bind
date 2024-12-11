@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <syscall.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -84,8 +85,7 @@ err:
 
 static struct Tux* tux;
 
-__attribute__((constructor)) void
-sbx_init(void)
+void sbx_init(void)
 {
     struct LFIPlatform* plat = lfi_new_plat(getpagesize());
     if (!plat) {
