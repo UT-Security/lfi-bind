@@ -244,9 +244,14 @@ void*
 sbx_register_cb(void* fn, size_t stackframe)
 {
     assert(fn);
-    assert(cbfind(fn) == -1 && "fn is already registered as a callback");
+    //assert(cbfind(fn) == -1 && "fn is already registered as a callback");
 
-    ssize_t slot = cbfreeslot();
+    ssize_t slot = cbfind(fn);
+    if (slot != -1) {
+      return &cbentries_box[slot].code[0];
+    }
+
+    slot = cbfreeslot();
     if (slot == -1)
         return NULL;
 
@@ -281,9 +286,6 @@ void*
 sbx_addr(void* sym)
 {
     const size_t trampoline_size = 16;
-    for (size_t i = 0; i < __lfi_trampotable_size; i++) {
-        if (&__lfi_trampolines[i * trampoline_size] == sym)
-            return __lfi_trampotable[i];
-    }
-    return NULL;
+    size_t diff = (uintptr_t)sym - (uintptr_t)&__lfi_trampolines;
+    return diff % trampoline_size == 0 && (diff / trampoline_size) < __lfi_trampotable_size ? __lfi_trampotable[diff / trampoline_size] : NULL;
 }

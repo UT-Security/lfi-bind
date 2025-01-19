@@ -30,10 +30,10 @@ void sbx_stackpop(size_t n);
 // Returns a pointer in the sandbox that the sandbox can use to invoke the
 // callback. The 'stackframe' argument gives the size of stack arguments that
 // must be copied when 'fn' is invoked.
-void* sbx_register_cb(void* fn, size_t stackframe);
+extern "C" void* sbx_register_cb(void* fn, size_t stackframe);
 
 // sbx_unregister_cb unregisters 'fn' as a callback.
-void sbx_unregister_cb(void* fn);
+extern  "C" void sbx_unregister_cb(void* fn);
 
 // sbx_addr returns the address in the sandbox of the given sandbox function.
-void* sbx_addr(void* fn);
+extern "C" void* sbx_addr(void* fn);

@@ -12,7 +12,17 @@ sbx_cbtrampoline:
 	pushq 16(%r11)          // push old sandbox stack pointer to stack
 	movq %r12, 16(%r11)     // save current sandbox stack pointer
 
+	// copy stack arguments from sandbox
+	pushq 24(%r12)
+	pushq 16(%r12)
+	pushq 8(%r12)
+
 	callq *%r10
+
+	// remove copied stack arguments
+	popq %r11
+	popq %r11
+	popq %r11
 
 	// restore %rsp
 	movq lfi_myctx@gottpoff(%rip), %r11
