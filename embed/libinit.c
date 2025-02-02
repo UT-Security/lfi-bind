@@ -28,6 +28,10 @@ struct File {
     FILE* file;
 };
 
+static inline int memfd_create(const char* name, unsigned int flags) {
+    return syscall(__NR_memfd_create, name, flags);
+}
+
 static bool cbinit(struct LFIContext* ctx);
 
 extern void sbx_cbtrampoline();
