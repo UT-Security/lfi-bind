@@ -274,7 +274,7 @@ func main() {
 	fstub.Close()
 	ftrampolines.Close()
 
-	run(lficc, fstub.Name(), "-o", stubgen, "-L"+filepath.Dir(solib), "-l"+libname(solib), "-lstdc++")
+	run(lficc, fstub.Name(), fstub_thread.Name(), "-o", stubgen, "-L"+filepath.Dir(solib), "-l"+libname(solib), "-lstdc++")
 	run("patchelf", "--set-interpreter", "/lib/ld-musl-x86_64.so.1", stubgen)
 	objmap["stub"] = stubgen
 
