@@ -169,7 +169,7 @@ sbx_stackpop(size_t n)
 }
 
 enum {
-    MAXCALLBACKS = 4096,
+    MAXCALLBACKS = 40960,
 };
 
 static void* callbacks[MAXCALLBACKS];
@@ -284,6 +284,12 @@ sbx_unregister_cb(void* fn)
     callbacks[slot] = NULL;
     __atomic_store_n(&cbentries_alias[slot].target, 0, __ATOMIC_SEQ_CST);
     __atomic_store_n(&cbentries_alias[slot].trampoline, 0, __ATOMIC_SEQ_CST);
+}
+
+void*
+sbx_cb_addr(void* fn)
+{
+    return (void*)*(uintptr_t*)((char*)fn + sizeof(cbtrampoline));
 }
 
 void*

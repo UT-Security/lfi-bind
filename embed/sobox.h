@@ -9,10 +9,10 @@
 // TODO: currently sbx_malloc is implemented by calling the malloc symbol
 // inside the sandbox. It could also be implemented by keeping an external
 // allocator that uses lfi_mmap to map pages inside the sandbox.
-void* sbx_malloc(size_t n);
+extern "C" void* sbx_malloc(size_t n);
 
 // sbx_free frees a pointer allocated inside the sandbox by sbx_malloc.
-void sbx_free(void* p);
+extern "C" void sbx_free(void* p);
 
 // sbx_stackalloc pushes 'n' bytes of space onto the sandbox stack. A pointer
 // to the allocated stack space is returned.
@@ -31,6 +31,9 @@ void sbx_stackpop(size_t n);
 // callback. The 'stackframe' argument gives the size of stack arguments that
 // must be copied when 'fn' is invoked.
 extern "C" void* sbx_register_cb(void* fn, size_t stackframe);
+
+// sbx_cb_addr returns the callback corresponding to the callback trampoline 'cb'.
+extern  "C" void* sbx_cb_addr(void* cb);
 
 // sbx_unregister_cb unregisters 'fn' as a callback.
 extern  "C" void sbx_unregister_cb(void* fn);
