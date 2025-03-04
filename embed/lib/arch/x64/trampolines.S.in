@@ -126,8 +126,8 @@ __lfi_trampoline:
 	call .lfi_trampoline_slowpath
 1:
 
-    pushq %rbp     // dummy push to keep stack properly aligned
     pushq 16(%r11) // push user stack value
+    pushq %rbp     // dummy push to keep stack properly aligned
 	movq %rsp, 0(%r11) # kstackp
 	movq 16(%r11), %rsp # stack pointer
 	movq 16+14*8(%r11), %r14 # base pointer
@@ -137,11 +137,17 @@ __lfi_trampoline:
 #ifdef LARGEBOX
     movq 16+15*8(%r11), %r15
 #endif
-	mov .lfisym__lfi_retfn@GOTPCREL(%rip), %r11
-	mov (%r11), %r11
+
 	andq $0xfffffffffffffff0, %rsp
-    // this push could segfault is the user stack is bad
-userpush:
+	movq 0(%r11), %r11 # load application stack pointer
+	pushq 96(%r11)
+	pushq 88(%r11)
+	pushq 80(%r11)
+	pushq 72(%r11)
+
+	mov __lfisym__lfi_retfn@GOTPCREL(%rip), %r11
+	mov (%r11), %r11
+
 	pushq %r11
 	xor %r11d, %r11d
 	// TODO: make sure r10 is bundle-aligned and within the sandbox
@@ -149,6 +155,7 @@ userpush:
 	jmpq *%r10
 	int3
 
+.p2align 4
 .global __lfi_trampolines
 __lfi_trampolines:
 {{- range $sym := .exported }}
