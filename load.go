@@ -25,6 +25,41 @@ var exposed = []string{
 	"free",
 }
 
+type GetterGen struct {
+	Symbol string
+	Getter string
+	Deref  bool
+}
+
+var getters = []GetterGen{
+	{Symbol: "_ZN2js16FunctionClassPtrE", Getter: "_ZN2js19GetFunctionClassPtrEv", Deref: true},
+	{Symbol: "_ZN2js24FunctionExtendedClassPtrE", Getter: "_ZN2js27GetFunctionExtendedClassPtrEv", Deref: true},
+
+	{Symbol: "_ZN2JS15NullHandleValueE", Getter: "_ZN2JS18GetNullHandleValueEv", Deref: true},
+	{Symbol: "_ZN2JS20UndefinedHandleValueE", Getter: "_ZN2JS23GetUndefinedHandleValueEv", Deref: true},
+	{Symbol: "_ZN2JS15TrueHandleValueE", Getter: "_ZN2JS18GetTrueHandleValueEv", Deref: true},
+	{Symbol: "_ZN2JS16FalseHandleValueE", Getter: "_ZN2JS19GetFalseHandleValueEv", Deref: true},
+	{Symbol: "_ZN2JS18NothingHandleValueE", Getter: "_ZN2JS21GetNothingHandleValueEv", Deref: true},
+
+	{Symbol: "_ZN2js11MallocArenaE", Getter: "_ZN2js14GetMallocArenaEv", Deref: true},
+	{Symbol: "_ZN2js24ArrayBufferContentsArenaE", Getter: "_ZN2js27GetArrayBufferContentsArenaEv", Deref: true},
+	{Symbol: "_ZN2js17StringBufferArenaE", Getter: "_ZN2js20GetStringBufferArenaEv", Deref: true},
+
+	{Symbol: "_ZN2JS21DefaultGlobalClassOpsE", Getter: "_ZN2JS24GetDefaultGlobalClassOpsEv", Deref: false},
+
+	{Symbol: "_ZN2JS21VoidHandlePropertyKeyE", Getter: "_ZN2JS24GetVoidHandlePropertyKeyEv", Deref: true},
+
+	{Symbol: "_ZN2js13ProxyClassOpsE", Getter: "_ZN2js15ProxyClassOps_pEv", Deref: false},
+	{Symbol: "_ZN2js19ProxyClassExtensionE", Getter: "_ZN2js21ProxyClassExtension_pEv", Deref: false},
+	{Symbol: "_ZN2js14ProxyObjectOpsE", Getter: "_ZN2js16ProxyObjectOps_pEv", Deref: false},
+	{Symbol: "_ZN2js10ProxyClassE", Getter: "_ZN2js12ProxyClass_pEv", Deref: false},
+
+	{Symbol: "_ZN2JS11ArrayBuffer13UnsharedClassE", Getter: "_ZN2JS11ArrayBuffer15UnsharedClass_pEv", Deref: true},
+	{Symbol: "_ZN2JS11ArrayBuffer11SharedClassE", Getter: "_ZN2JS11ArrayBuffer13SharedClass_pEv", Deref: true},
+	{Symbol: "_ZN2JS8DataView8ClassPtrE", Getter: "_ZN2JS8DataView11GetClassPtrEv", Deref: true},
+	{Symbol: "_ZN2JS15TypedArray_base7classesE", Getter: "_ZN2JS15TypedArray_base10getClassesEv", Deref: true},
+}
+
 func IsExport(sym string, exports map[string]bool) bool {
 	dsym := demangle.Filter(sym)
 	_, after, found := strings.Cut(dsym, " ")

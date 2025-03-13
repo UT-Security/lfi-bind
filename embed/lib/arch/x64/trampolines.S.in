@@ -184,6 +184,20 @@ __lfi_trampolines:
     {{end}}
 {{- end}}
 
+{{- range $getter := .getters}}
+.p2align 4
+.global {{$getter.Getter}}
+{{$getter.Getter}}:
+	movq __lfisym_{{$getter.Symbol}}@GOTPCREL(%rip), %r10
+{{- if $getter.Deref}}
+	movq (%r10), %r10
+	movq (%r10), %rax
+{{- else}}
+	movq (%r10), %rax
+{{- end}}
+	ret
+{{- end}}
+
 .section ".data.trampolines"
 
 .global __lfi_trampotable
@@ -200,9 +214,15 @@ __lfisym_{{$sym}}:
 	.quad 0
 {{- end}}
 
+{{- range $getter := .getters}}
+.global __lfisym_{{$getter.Symbol}}
+__lfisym_{{$getter.Symbol}}:
+	.quad 0
+{{- end}}
+
 .global __lfi_trampotable_size
 __lfi_trampotable_size:
-	.quad {{.nexported}}+{{.nexposed}}
+	.quad {{.nexported}}+{{.nexposed}}+{{.ngetters}}
 
 .global __lfisym__lfi_pause
 .global __lfisym__lfi_thread_create

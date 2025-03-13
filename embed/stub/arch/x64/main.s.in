@@ -36,4 +36,7 @@ trampotable:
 {{- range $sym := .exposed}}
 	.quad {{$sym}}
 {{- end}}
+{{- range $getter := .getters}}
+	.quad {{$getter.Symbol}}
+{{- end}}
 .section .note.GNU-stack,"",@progbits

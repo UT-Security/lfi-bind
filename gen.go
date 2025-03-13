@@ -49,9 +49,11 @@ func GenFile(path string, lib string, exported, exposed []string, filemap map[st
 		"lib":       lib,
 		"exported":  exported,
 		"exposed":   exposed,
+		"getters":   getters,
 		"files":     files,
 		"nexported": len(exported),
 		"nexposed":  len(exposed),
+		"ngetters":  len(getters),
 		"nfiles":    len(files),
 	}, map[string]any{
 		"ident": ident,
