@@ -60,9 +60,67 @@ var getters = []GetterGen{
 	{Symbol: "_ZN2JS15TypedArray_base7classesE", Getter: "_ZN2JS15TypedArray_base10getClassesEv", Deref: true},
 }
 
+var ignoredExports = map[string]bool{
+	"_ZN2JS9GCCellPtr11checkedCastEPvNS_9TraceKindE": true,
+	"_ZN2JS9GCCellPtrC2EDn": true,
+	"_ZN2JS9GCCellPtrC2EP10JSFunction": true,
+	"_ZN2JS9GCCellPtrC2EP8JSScript": true,
+	"_ZN2JS9GCCellPtrC2EPvNS_9TraceKindE": true,
+	"_ZN2JS9GCCellPtrC2Ev": true,
+	"_ZN2JS9GCCellPtrC2I8JSObjectEEPT_": true,
+	"_ZN2JS9GCCellPtrC2I8JSStringEEPT_": true,
+	"_ZN2JS9GCCellPtrC2INS_6BigIntEEEPT_": true,
+	"_ZN2JS9GCCellPtrC2INS_6SymbolEEEPT_": true,
+	"_ZN2JS11PropertyKey10NonIntAtomEP6JSAtom": true,
+	"_ZN2JS11PropertyKey10NonIntAtomEP8JSString": true,
+	"_ZN2JS11PropertyKey11fromRawBitsEm": true,
+	"_ZN2JS11PropertyKey3IntEi": true,
+	"_ZN2JS11PropertyKey4VoidEv": true,
+	"_ZN2JS11PropertyKey6SymbolEPNS_6SymbolE": true,
+	"_ZN2JS11PropertyKey9fitsInIntEi": true,
+	"_ZN2JS11PropertyKeyC2Ev": true,
+	"_ZN2JS5Value10fromDoubleEd": true,
+	"_ZN2JS5Value10setBooleanEb": true,
+	"_ZN2JS5Value10setPrivateEPv": true,
+	"_ZN2JS5Value11fromRawBitsEm": true,
+	"_ZN2JS5Value12setUndefinedEv": true,
+	"_ZN2JS5Value14bitsFromDoubleEd": true,
+	"_ZN2JS5Value14setMagicUint32Ej": true,
+	"_ZN2JS5Value15setObjectOrNullEP8JSObject": true,
+	"_ZN2JS5Value16setObjectNoCheckEP8JSObject": true,
+	"_ZN2JS5Value16setPrivateUint32Ej": true,
+	"_ZN2JS5Value17fromTagAndPayloadE10JSValueTagm": true,
+	"_ZN2JS5Value17setPrivateGCThingEPN2js2gc4CellE": true,
+	"_ZN2JS5Value21bitsFromTagAndPayloadE10JSValueTagm": true,
+	"_ZN2JS5Value21isNumberRepresentableIiEEbT_": true,
+	"_ZN2JS5Value21isNumberRepresentableImEEbT_": true,
+	"_ZN2JS5Value4swapERS0_": true,
+	"_ZN2JS5Value7setNullEv": true,
+	"_ZN2JS5Value8setInt32Ei": true,
+	"_ZN2JS5Value8setMagicE10JSWhyMagic": true,
+	"_ZN2JS5Value9fromInt32Ei": true,
+	"_ZN2JS5Value9setBigIntEPNS_6BigIntE": true,
+	"_ZN2JS5Value9setDoubleEd": true,
+	"_ZN2JS5Value9setNumberEd": true,
+	"_ZN2JS5Value9setNumberIiEEvT_": true,
+	"_ZN2JS5Value9setNumberImEEvT_": true,
+	"_ZN2JS5Value9setObjectER8JSObject": true,
+	"_ZN2JS5Value9setStringEP8JSString": true,
+	"_ZN2JS5Value9setSymbolEPNS_6SymbolE": true,
+	"_ZN2JS5ValueC2Em": true,
+	"_ZN2JS5ValueC2Ev": true,
+	"_ZN2JS18InstantiateOptionsC2ERKNS_22ReadOnlyCompileOptionsE": true,
+	"_ZNK2JS18InstantiateOptions24hideFromNewScriptInitialEv": true,
+	"_ZNK2JS18InstantiateOptions6copyToERNS_14CompileOptionsE": true,
+}
+
 func IsExport(sym string, exports map[string]bool) bool {
 	dsym := demangle.Filter(sym)
 	_, after, found := strings.Cut(dsym, " ")
+
+	if ignoredExports[sym] {
+		return false
+	}
 
 	if strings.HasPrefix(dsym, "js::") || strings.HasPrefix(dsym, "JS::") || strings.HasPrefix(dsym, "JS_") || strings.Contains(dsym, "ProfilingStack") || strings.Contains(dsym, "JSStructuredCloneData") || strings.Contains(dsym, "JSAutoRealm") || strings.Contains(dsym, "JSAutoStructuredCloneBuffer") || strings.Contains(dsym, "JSErrorReport") || strings.Contains(dsym, "JSErrorNotes") || strings.Contains(dsym, "JSAutoNullableRealm") || strings.Contains(dsym, "JSPrincipalsWithOps") {
 		return true
