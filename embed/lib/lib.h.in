@@ -4,7 +4,7 @@
 
 #include "lfi.h"
 
-extern "C" void {{ .lib }}_init();
+extern "C" void {{ .lib }}_init(void*);
 
 // {{ .lib }}_malloc allocates a heap object of size 'n' inside the sandbox.
 //
@@ -27,7 +27,7 @@ extern "C" void* {{ .lib }}_stackpush(size_t n);
 // {{ .lib }}_stackpop pops 'n' bytes of space from the sandbox stack.
 //
 // TODO: {{ .lib }}_stackpop is unimplemented
-extern "C" void {{ .lib }}_stackpop(size_t n);
+extern "C" void {{ .lib }}_stackpop(size_t n, void* ptr);
 
 // {{ .lib }}_register_cb registers 'fn' as a callback.
 //

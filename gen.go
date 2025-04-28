@@ -14,6 +14,12 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+var hasStackReturn = map[string]bool{
+	"_Z23JS_EncodeStringToLatin1P9JSContextP8JSString": true,
+	"_Z21JS_EncodeStringToUTF8P9JSContextN2JS6HandleIP8JSStringEE": true,
+	"_Z11JS_smprintfPKcz": true,
+}
+	
 func ReadEmbed(s string) string {
 	data, err := files.ReadFile(s)
 	if err != nil {
@@ -65,7 +71,13 @@ func GenFile(path string, lib string, exported, exposed []string, filemap map[st
 			return ""
 		},
 		"has_stack_args": func(s string) bool {
+			if len(stackargs[s]) != 0 {
+				log.Println(s)
+			}
 			return len(stackargs[s]) != 0
+		},
+		"has_stack_ret": func(s string) bool {
+			return hasStackReturn[s]	
 		},
 	})
 }

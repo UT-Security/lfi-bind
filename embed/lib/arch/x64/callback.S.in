@@ -26,14 +26,12 @@
 	pushq 16(%r11)          // push old sandbox stack pointer to stack
 	movq %r12, 16(%r11)     // save current sandbox stack pointer
 
-	pushq %rdi // align stack
-	pushq 32(%r12)
-	pushq 24(%r12)
+	pushq %r11 // needed for stack alignment (and preserving r11)
 	pushq 16(%r12)
 	pushq 8(%r12)
 	callq *%r10
-	addq $0x20, %rsp
-	popq %rdi
+	addq $0x10, %rsp
+	popq %r11
 
 	// restore %rsp
 	movq 16(%r11), %r10      // move current sandbox stack pointer to r10
@@ -47,9 +45,9 @@
 	// This pop instruction could segfault if the sandbox has provided a bad stack.
 userpop:
 	popq %r11
-	// TODO: different sequence for large sandboxes is needed
 	andq %r15, %r11
 	orq %r14, %r11
+	// TODO: bundle align the return address
 	jmpq *%r11
 
 .section .note.GNU-stack,"",@progbits

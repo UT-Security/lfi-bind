@@ -26,6 +26,18 @@ _lfi_retfn:
 	// special runtime call for invoking lfi_ret
 	//lfi:rtcall_return
 	int3
+.p2align 5
+.global _lfi_stack_retfn
+_lfi_stack_retfn:
+	// special runtime call for invoking lfi_stack_ret
+	//lfi:disable
+	.bundle_lock
+	leaq 1f(%rip), %r11
+	jmpq *32(%r14)
+1:
+	.bundle_unlock
+	//lfi:enable
+	int3
 
 .section ".data.trampotable"
 .global trampotable

@@ -98,7 +98,7 @@ void
 
     struct LFIPlatform* plat = lfi->lfi_new_plat((struct LFIPlatOptions) {
         .pagesize = getpagesize(),
-        .vmsize = 4UL * 1024 * 1024 * 1024,
+        .vmsize = 256UL * 1024 * 1024 * 1024,
     });
     if (!plat) {
         fprintf(stderr, "sobox: error loading LFI: %s\n", lfi->lfi_strerror());
@@ -112,7 +112,7 @@ void
         .fs = (struct TuxFS) {
             .open = fsopen,
         },
-        .verbose = true,
+        .verbose = false,
     });
 
     if (!tux) {
@@ -166,21 +166,21 @@ void
     lfi->lfi_thread_init({{.lib}}__lfi_thread_create, __lfisym__lfi_pause);
 }
 
+extern _Thread_local struct LFIContext* lfi_myctx;
+
 void*
 {{ .lib }}_stackpush(size_t n)
 {
-    (void) n;
-    assert(!"unimplemented");
+    *(uintptr_t*)((char*)lfi_myctx + 16) -= n;
+    return (void*)*(uintptr_t*)((char*)lfi_myctx + 16);
 }
 
-size_t
-{{ .lib }}_stackpop(size_t n)
+void
+{{ .lib }}_stackpop(size_t n, void* ptr)
 {
-    (void) n;
-    assert(!"unimplemented");
+    assert((void*)*(uintptr_t*)((char*)lfi_myctx + 16) == ptr);
+    *(uintptr_t*)((char*)lfi_myctx + 16) += n;
 }
-
-extern _Thread_local struct LFIContext* lfi_myctx;
 
 struct LFIContext*
 {{ .lib }}_ctx(void)
