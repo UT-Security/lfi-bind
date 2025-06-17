@@ -60,13 +60,19 @@ void*
 
     // TODO: support non-zero stackframes: create a trampoline for 'stackframe'
     // if it does not exist
-    if (stackframe != 0)
+    if (stackframe > 16) {
+        assert(false && "unsupported stack arguments size");
         return NULL;
+    }
 
     // write 'fn' into the 'target' field for the chosen slot.
     __atomic_store_n(&cbentries_alias[slot].target, (uint64_t) fn, __ATOMIC_SEQ_CST);
     // write the trampoline into the 'trampoline' field for the chosen slot
-    __atomic_store_n(&cbentries_alias[slot].trampoline, (uint64_t) {{.lib}}_cbtrampoline, __ATOMIC_SEQ_CST);
+    if (stackframe != 0) {
+        __atomic_store_n(&cbentries_alias[slot].trampoline, (uint64_t) {{.lib}}_cbtrampoline_stack, __ATOMIC_SEQ_CST);
+    } else {
+        __atomic_store_n(&cbentries_alias[slot].trampoline, (uint64_t) {{.lib}}_cbtrampoline, __ATOMIC_SEQ_CST);
+    }
 
     // Mark the slot as allocated.
     callbacks[slot] = fn;
@@ -86,12 +92,15 @@ void
 }
 
 void*
+{{ .lib }}_retrieve_cb(void* cb)
+{
+    return (void*)*(uintptr_t*)((char*)cb + sizeof(cbtrampoline));
+}
+
+void*
 {{ .lib }}_addr(void* sym)
 {
     const size_t trampoline_size = 16;
-    for (size_t i = 0; i < __lfi_trampotable_size; i++) {
-        if (&__lfi_trampolines[i * trampoline_size] == sym)
-            return __lfi_trampotable[i];
-    }
-    return NULL;
+    size_t diff = (uintptr_t)sym - (uintptr_t)&__lfi_trampolines;
+    return diff % trampoline_size == 0 && (diff / trampoline_size) < __lfi_trampotable_size ? __lfi_trampotable[diff / trampoline_size] : NULL;
 }

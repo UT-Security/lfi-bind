@@ -37,6 +37,7 @@ struct File {
 static bool cbinit(struct LFIContext* ctx);
 
 extern void {{.lib}}_cbtrampoline();
+extern void {{.lib}}_cbtrampoline_stack();
 
 extern char* lfibind_filenames[];
 extern struct FileData lfibind_filedata[];
@@ -92,15 +93,15 @@ err:
     return NULL;
 }
 
-static void
-lib_init(struct LFILibCalls* lfi_)
+void
+{{ .lib }}_init(struct LFILibCalls* lfi_)
 {
     assert(lfi_);
     lfi = lfi_;
 
     struct LFIPlatform* plat = lfi->lfi_new_plat((struct LFIPlatOptions) {
         .pagesize = getpagesize(),
-        .vmsize = 4UL * 1024 * 1024 * 1024,
+        .vmsize = 256UL * 1024 * 1024 * 1024,
     });
     if (!plat) {
         fprintf(stderr, "sobox: error loading LFI: %s\n", lfi->lfi_strerror());
@@ -114,7 +115,7 @@ lib_init(struct LFILibCalls* lfi_)
         .fs = (struct TuxFS) {
             .open = fsopen,
         },
-        .verbose = true,
+        .verbose = false,
     });
 
     if (!tux) {
@@ -159,12 +160,6 @@ lib_init(struct LFILibCalls* lfi_)
     install_trampotable((void**) r);
 }
 
-__attribute__((constructor)) void
-{{ .lib }}_construct(void)
-{
-    lib_init(lfi_libcalls());
-}
-
 extern void {{ .lib }}__lfi_thread_create(void* fn);
 extern void {{ .lib }}__lfi_pause(void);
 
@@ -188,16 +183,26 @@ size_t
     assert(!"unimplemented");
 }
 
-#define MAXCALLBACKS 4096
+#define MAXCALLBACKS 40960
 
 static void* callbacks[MAXCALLBACKS];
 
 static ssize_t
 cbfreeslot()
 {
-    for (ssize_t i = 0; i < MAXCALLBACKS; i++) {
-        if (!callbacks[i])
+    static ssize_t next_slot = 0;
+    for (ssize_t i = next_slot; i < MAXCALLBACKS; i++) {
+        if (!callbacks[i]) {
+            next_slot = (i + 1) % MAXCALLBACKS; 
             return i;
+        }
+    }
+
+    for (ssize_t i = 0; i < next_slot; i++) {
+        if (!callbacks[i]) {
+            next_slot = (i + 1) % MAXCALLBACKS; 
+            return i;
+        }
     }
     return -1;
 }

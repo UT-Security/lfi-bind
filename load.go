@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"debug/elf"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 
+	demangle "github.com/ianlancetaylor/demangle"
 	"github.com/erikgeiser/ar"
 )
 
@@ -17,22 +18,42 @@ var exposed = []string{
 	"_lfi_pause",
 	"_lfi_thread_create",
 	"_lfi_thread_destroy",
-	"malloc",
-	"realloc",
-	"calloc",
+	//NOTE(abhishek): expose jemalloc moz_ prefixed
+	// arena allocation functions
+	"moz_arena_malloc",
+	"moz_arena_realloc",
+	"moz_arena_calloc",
 	"free",
 }
 
-func IsExport(sym string, exports map[string]bool) bool {
-	return len(exports) > 0 && exports[sym] || len(exports) == 0
+type ExportInfo struct {
+	Name string
+	IsGlobal bool
 }
 
-func ObjGetExports(file *elf.File, es map[string]bool) []string {
+func IsExport(sym string, exports map[string]bool) bool {
+	if len(exports) > 0 && exports[sym] {
+		return true
+	}
+
+	dsym := demangle.Filter(sym)
+	_, after, found := strings.Cut(dsym, " ")
+
+	if strings.HasPrefix(dsym, "js::") || strings.HasPrefix(dsym, "JS::") || strings.HasPrefix(dsym, "sandbox::") || strings.HasPrefix(dsym, "JS_") || strings.Contains(dsym, "ProfilingStack") || strings.Contains(dsym, "JSStructuredCloneData") || strings.Contains(dsym, "JSAutoRealm") || strings.Contains(dsym, "JSAutoStructuredCloneBuffer") || strings.Contains(dsym, "JSErrorReport") || strings.Contains(dsym, "JSErrorNotes") || strings.Contains(dsym, "JSAutoNullableRealm") || strings.Contains(dsym, "JSPrincipalsWithOps") {
+		return true
+	} else if found && (strings.HasPrefix(after, "js::") || strings.HasPrefix(after, "JS::") || strings.HasPrefix(after, "sandbox::") || strings.HasPrefix(after, "JS_")) {
+		return true
+	}
+
+	return false
+}
+
+func ObjGetExports(file *elf.File, es map[string]bool) []ExportInfo {
 	syms, err := file.Symbols()
 	if err != nil {
 		fatal(err)
 	}
-	var exports []string
+	var exports []ExportInfo
 	for _, sym := range syms {
 		if IsExport(sym.Name, es) && (elf.ST_BIND(sym.Info) == elf.STB_GLOBAL && elf.ST_TYPE(sym.Info) == elf.STT_FUNC && sym.Section != elf.SHN_UNDEF) {
 			if sym.Name == "_init" || sym.Name == "_fini" {
@@ -41,14 +62,23 @@ func ObjGetExports(file *elf.File, es map[string]bool) []string {
 				// not be exported.
 				continue
 			}
-			exports = append(exports, sym.Name)
+			exports = append(exports, ExportInfo{ Name: sym.Name, IsGlobal: true })
+		}
+		if IsExport(sym.Name, es) && (elf.ST_BIND(sym.Info) == elf.STB_WEAK && elf.ST_TYPE(sym.Info) == elf.STT_FUNC && sym.Section != elf.SHN_UNDEF) {
+			if sym.Name == "_init" || sym.Name == "_fini" {
+				// Musl inserts these symbols on shared libraries, but after we
+				// compile the stub they will be linked internally, and should
+				// not be exported.
+				continue
+			}
+			exports = append(exports, ExportInfo{ Name: sym.Name, IsGlobal: false })
 		}
 	}
 	ObjGetStackArgs(file, es)
 	return exports
 }
 
-func DynamicGetExports(dynlib *os.File, es map[string]bool) ([]string, StackArgInfo) {
+func DynamicGetExports(dynlib *os.File, es map[string]bool) ([]ExportInfo, StackArgInfo) {
 	f, err := elf.NewFile(dynlib)
 	if err != nil {
 		fatal(err)
@@ -56,12 +86,12 @@ func DynamicGetExports(dynlib *os.File, es map[string]bool) ([]string, StackArgI
 	return ObjGetExports(f, es), ObjGetStackArgs(f, es)
 }
 
-func StaticGetExports(staticlib *os.File, es map[string]bool) ([]string, StackArgInfo) {
+func StaticGetExports(staticlib *os.File, es map[string]bool) ([]ExportInfo, StackArgInfo) {
 	r, err := ar.NewReader(staticlib)
 	if err != nil {
 		fatal(err)
 	}
-	var exports []string
+	var exports []ExportInfo
 	for {
 		_, err := r.Next()
 		if err != nil {
@@ -147,6 +177,6 @@ func ObjGetStackArgs(file *elf.File, es map[string]bool) StackArgInfo {
 		info.Args[sym] = args
 	}
 
-	fmt.Println(info)
+	//fmt.Println(info)
 	return info
 }

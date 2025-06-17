@@ -4,6 +4,8 @@
 
 #include "lfi.h"
 
+extern "C" void {{ .lib }}_init(void*);
+
 // {{ .lib }}_malloc allocates a heap object of size 'n' inside the sandbox.
 //
 // TODO: make sure sbx_malloc returns a pointer inside the sandbox.
@@ -22,24 +24,28 @@ void {{ .lib }}_free(void* p);
 // to the allocated stack space is returned.
 //
 // TODO: {{ .lib }}_stackpush is unimplemented
-void* {{ .lib }}_stackpush(size_t n);
+extern "C" void* {{ .lib }}_stackpush(size_t n);
 
 // {{ .lib }}_stackpop pops 'n' bytes of space from the sandbox stack.
 //
 // TODO: {{ .lib }}_stackpop is unimplemented
-void {{ .lib }}_stackpop(size_t n);
+extern "C" void {{ .lib }}_stackpop(size_t n);
 
 // {{ .lib }}_register_cb registers 'fn' as a callback.
 //
 // Returns a pointer in the sandbox that the sandbox can use to invoke the
 // callback. The 'stackframe' argument gives the size of stack arguments that
 // must be copied when 'fn' is invoked.
-void* {{ .lib }}_register_cb(void* fn, size_t stackframe);
+extern "C" void* {{ .lib }}_register_cb(void* fn, size_t stackframe);
 
 // {{ .lib }}_unregister_cb unregisters 'fn' as a callback.
-void {{ .lib }}_unregister_cb(void* fn);
+extern "C" void {{ .lib }}_unregister_cb(void* fn);
+
+// {{ .lib }}_retrieve_cb retrieves the registered function corresponding to the
+// the sandbox callback 'cb' previously returned from a call to {{ .lib }}_register_cb.
+extern "C" void* {{ .lib }}_retrieve_cb(void* cb);
 
 // {{ .lib }}_addr returns the address in the sandbox of the given sandbox function.
-void* {{ .lib }}_addr(void* fn);
+extern "C" void* {{ .lib }}_addr(void* fn);
 
-struct LFIContext* {{ .lib }}_ctx(void);
+extern "C" struct LFIContext* {{ .lib }}_ctx(void);

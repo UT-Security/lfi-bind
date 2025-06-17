@@ -133,12 +133,12 @@ __lfi_trampoline:
 __lfi_trampolines:
 {{- range $sym := .exported }}
 .p2align 4
-.global {{$sym}}
-{{$sym}}:
-	adrp x10, :got:__lfisym_{{$sym}}
-	ldr x10, [x10, :got_lo12:__lfisym_{{$sym}}]
+.global {{$sym.Name}}
+{{$sym.Name}}:
+	adrp x10, :got:__lfisym_{{$sym.Name}}
+	ldr x10, [x10, :got_lo12:__lfisym_{{$sym.Name}}]
 	ldr x10, [x10]
-	{{if (has_stack_args $sym)}}
+	{{if (has_stack_args $sym.Name)}}
 	b .lfi_trampoline_stack
 	{{else}}
 	b .lfi_trampoline
@@ -165,8 +165,8 @@ __lfi_trampolines:
 __lfi_trampotable:
 
 {{- range $sym := .exported}}
-.global __lfisym_{{$sym}}
-__lfisym_{{$sym}}:
+.global __lfisym_{{$sym.Name}}
+__lfisym_{{$sym.Name}}:
 	.quad 0
 {{- end}}
 

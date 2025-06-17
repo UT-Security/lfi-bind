@@ -113,7 +113,7 @@ func main() {
 
 	var stackinfo StackArgInfo
 
-	var exports []string
+	var exports []ExportInfo
 	if strings.HasSuffix(lib, ".a") {
 		exports, stackinfo = StaticGetExports(f, exportSet)
 	} else if strings.HasSuffix(lib, ".so") {
@@ -121,7 +121,7 @@ func main() {
 	} else {
 		fatal("expected *.a or *.so file, got", lib)
 	}
-	log.Println("exports:", exports)
+	log.Println("exports:", len(exports))
 
 	if *showExports {
 		for _, s := range exports {
@@ -171,9 +171,11 @@ func main() {
 		return
 	}
 
-	if static && !*dyn {
-		CompileStaticLib(dir, *out)
-	} else {
-		CompileDynamicLib(dir, *out)
-	}
+	// NOTE(abhishek): We included the lfi-bind generated library sources
+	// in the Firefox tree directly and compile them there. 
+	//if static && !*dyn {
+	//	CompileStaticLib(dir, *out)
+	//} else {
+	//	CompileDynamicLib(dir, *out)
+	//}
 }

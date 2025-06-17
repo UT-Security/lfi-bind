@@ -42,9 +42,43 @@
 	// This pop instruction could segfault if the sandbox has provided a bad stack.
 userpop:
 	popq %r11
-	// TODO: different sequence for large sandboxes is needed
-	andl $0xffffffe0, %r11d
+	andq %r15, %r11
 	orq %r14, %r11
+	//TODO(abhishek): bundle align the return address
+	jmpq *%r11
+
+.global {{.lib}}_cbtrampoline_stack
+{{.lib}}_cbtrampoline_stack:
+	// Entrypoint for callbacks. Callback target is in %r10.
+	get_ctx
+	xchg 0(%r11), %rsp
+	pushq %r12              // save r12 to use as temp
+	movq 0(%r11), %r12      // move current sandbox stack pointer to r12
+	pushq 16(%r11)          // push old sandbox stack pointer to stack
+	movq %r12, 16(%r11)     // save current sandbox stack pointer
+
+	pushq %r11 // needed for stack alignment (and preserving r11)
+	pushq 16(%r12)
+	pushq 8(%r12)
+	callq *%r10
+	addq $0x10, %rsp
+	popq %r11
+
+	// restore %rsp
+	movq 16(%r11), %r10      // move current sandbox stack pointer to r10
+	popq 16(%r11)            // restore old sandbox stack pointer
+	popq %r12                // restore r12
+	movq %rsp, 0(%r11)       // make sure we don't clobber stack pointer
+	movq %r10, %rsp          // restore stack pointer
+
+	// return back to sandbox
+
+	// This pop instruction could segfault if the sandbox has provided a bad stack.
+userpop_stack:
+	popq %r11
+	andq %r15, %r11
+	orq %r14, %r11
+	//TODO(abhishek): bundle align the return address
 	jmpq *%r11
 
 .section .note.GNU-stack,"",@progbits
