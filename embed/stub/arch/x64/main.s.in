@@ -31,7 +31,7 @@ _lfi_retfn:
 .global trampotable
 trampotable:
 {{- range $sym := .exported }}
-	.quad {{$sym}}
+	.quad {{$sym.Name}}
 {{- end }}
 {{- range $sym := .exposed}}
 	.quad {{$sym}}
