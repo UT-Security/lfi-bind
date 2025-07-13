@@ -22,7 +22,7 @@ func Run(command string, args ...string) {
 }
 
 func LibName(lib string) string {
-	if strings.HasPrefix("lib", lib) {
+	if strings.HasPrefix(lib, "lib") {
 		_, after, _ := strings.Cut(lib, "lib")
 		return after
 	}
