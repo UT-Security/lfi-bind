@@ -3,19 +3,8 @@
 .text
 
 .macro get_ctx
-#ifndef NODLOPEN
-	movq lfi@GOTPCREL(%rip), %rax
-	movq (%rax), %rax // %rax now points to struct LFI
-	movq (%rax), %rax // %rax now points to lfi_ctx_fn
-	leaq 1f(%rip), %r11
-	jmpq *%rax
-1:
-	// context pointer is now in %rax
-	movq %rax, %r11
-#else
 	movq lfi_myctx@gottpoff(%rip), %r11
 	movq %fs:(%r11), %r11
-#endif
 .endm
 
 .global {{.lib}}_cbtrampoline
@@ -44,9 +33,9 @@
 	// This pop instruction could segfault if the sandbox has provided a bad stack.
 userpop:
 	popq %r11
-	//andq %r15, %r11
-	//orq %r14, %r11
-	//TODO(abhishek): bundle align the return address
+	andq %r15, %r11
+	andq 0xffffffffffffffe0, %r11
+	orq %r14, %r11
 	jmpq *%r11
 
 .global {{.lib}}_cbtrampoline_stack
@@ -78,9 +67,9 @@ userpop:
 	// This pop instruction could segfault if the sandbox has provided a bad stack.
 userpop_stack:
 	popq %r11
-	//andq %r15, %r11
-	//orq %r14, %r11
-	//TODO(abhishek): bundle align the return address
+	andq %r15, %r11
+	andq 0xffffffffffffffe0, %r11
+	orq %r14, %r11
 	jmpq *%r11
 
 .section .note.GNU-stack,"",@progbits
