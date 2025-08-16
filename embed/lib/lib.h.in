@@ -22,14 +22,10 @@ void {{ .lib }}_free(void* p);
 
 // {{ .lib }}_stackalloc pushes 'n' bytes of space onto the sandbox stack. A pointer
 // to the allocated stack space is returned.
-//
-// TODO: {{ .lib }}_stackpush is unimplemented
 extern "C" void* {{ .lib }}_stackpush(size_t n);
 
 // {{ .lib }}_stackpop pops 'n' bytes of space from the sandbox stack.
-//
-// TODO: {{ .lib }}_stackpop is unimplemented
-extern "C" void {{ .lib }}_stackpop(size_t n);
+extern "C" void {{ .lib }}_stackpop(size_t n, void* ptr);
 
 // {{ .lib }}_register_cb registers 'fn' as a callback.
 //

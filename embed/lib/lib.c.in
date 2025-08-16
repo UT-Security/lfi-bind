@@ -169,18 +169,20 @@ void
     lfi->lfi_thread_init({{.lib}}__lfi_thread_create, __lfisym__lfi_pause);
 }
 
+extern _Thread_local struct LFIContext* lfi_myctx;
+
 void*
 {{ .lib }}_stackpush(size_t n)
 {
-    (void) n;
-    assert(!"unimplemented");
+    *(uintptr_t*)((char*)lfi_myctx + 32) -= n;
+    return (void*)*(uintptr_t*)((char*)lfi_myctx + 32);
 }
 
 size_t
-{{ .lib }}_stackpop(size_t n)
+{{ .lib }}_stackpop(size_t n, void* ptr)
 {
-    (void) n;
-    assert(!"unimplemented");
+    assert((void*)*(uintptr_t*)((char*)lfi_myctx + 32) == ptr);
+    *(uintptr_t*)((char*)lfi_myctx + 32) += n;
 }
 
 #define MAXCALLBACKS 40960
