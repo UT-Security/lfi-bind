@@ -10,6 +10,8 @@
 .global {{.lib}}_cbtrampoline
 {{.lib}}_cbtrampoline:
 	// Entrypoint for callbacks. Callback target is in %r10.
+	movq {{.lib}}_last_callback_invoked@gottpoff(%rip), %r11
+	movq %rax, %fs:(%r11)
 	get_ctx
 	xchg 0(%r11), %rsp
 	pushq %r12              // save r12 to use as temp
@@ -41,6 +43,8 @@ userpop:
 .global {{.lib}}_cbtrampoline_stack
 {{.lib}}_cbtrampoline_stack:
 	// Entrypoint for callbacks. Callback target is in %r10.
+	movq {{.lib}}_last_callback_invoked@gottpoff(%rip), %r11
+	movq %rax, %fs:(%r11)
 	get_ctx
 	xchg 0(%r11), %rsp
 	pushq %r12              // save r12 to use as temp

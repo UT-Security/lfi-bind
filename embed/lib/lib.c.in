@@ -187,36 +187,37 @@ size_t
 
 #define MAXCALLBACKS 40960
 
-static void* callbacks[MAXCALLBACKS];
+static void* callback_keys[MAXCALLBACKS];
+_Thread_local size_t {{ .lib }}_last_callback_invoked;
 
-static ssize_t
-cbfreeslot()
+static size_t
+cbkey_freeslot()
 {
-    static ssize_t next_slot = 0;
-    for (ssize_t i = next_slot; i < MAXCALLBACKS; i++) {
-        if (!callbacks[i]) {
+    static size_t next_slot = 0;
+    for (size_t i = next_slot; i < MAXCALLBACKS; i++) {
+        if (!callback_keys[i]) {
             next_slot = (i + 1) % MAXCALLBACKS; 
             return i;
         }
     }
 
-    for (ssize_t i = 0; i < next_slot; i++) {
-        if (!callbacks[i]) {
+    for (size_t i = 0; i < next_slot; i++) {
+        if (!callback_keys[i]) {
             next_slot = (i + 1) % MAXCALLBACKS; 
             return i;
         }
     }
-    return -1;
+    return MAXCALLBACKS;
 }
 
-static ssize_t
-cbfind(void* fn)
+static size_t
+cbkey_find(void* key)
 {
     for (size_t i = 0; i < MAXCALLBACKS; i++) {
-        if (callbacks[i] == fn)
+        if (callback_keys[i] == key)
             return i;
     }
-    return -1;
+    return MAXCALLBACKS;
 }
 
 #if defined(__x86_64__) || defined(_M_X64)
