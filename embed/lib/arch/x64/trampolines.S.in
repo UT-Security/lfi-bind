@@ -81,6 +81,12 @@ __lfi_trampoline_stack:
     jne 1f
     call .lfi_trampoline_slowpath
 1:
+	movq 16(%r11), %r14
+	test %r14, %r14
+	jz .trampoline_stack_ok
+	int3
+.trampoline_stack_ok:
+	movq $1, 16(%r11)
 
     pushq %rbp     // dummy push to keep stack properly aligned
     pushq PROC_REGS(%r11) // push user stack value
@@ -116,6 +122,12 @@ __lfi_trampoline:
 	jne 1f
 	call .lfi_trampoline_slowpath
 1:
+	movq 16(%r11), %r14
+	test %r14, %r14
+	jz .trampoline_ok
+	int3
+.trampoline_ok:
+	movq $1, 16(%r11)
 
     pushq %rbp     // dummy push to keep stack properly aligned
     pushq PROC_REGS(%r11) // push user stack value

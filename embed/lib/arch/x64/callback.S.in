@@ -13,6 +13,14 @@
 	movq {{.lib}}_last_callback_invoked@gottpoff(%rip), %r11
 	movq %rax, %fs:(%r11)
 	get_ctx
+
+	movq 16(%r11), %rax
+	test %rax, %rax
+	jnz .cbtrampoline_ok_entry
+	int3
+.cbtrampoline_ok_entry:
+	movq $0, 16(%r11)
+
 	xchg 0(%r11), %rsp
 	pushq %r12              // save r12 to use as temp
 	movq 0(%r11), %r12      // move current sandbox stack pointer to r12
@@ -22,6 +30,13 @@
 	pushq %r11 // needed for stack alignment (and preserving r11)
 	callq *%r10
 	popq %r11
+
+	movq 16(%r11), %r10
+	test %r10, %r10
+	jz .cbtrampoline_ok_exit
+	int3
+.cbtrampoline_ok_exit:
+	movq $1, 16(%r11)
 
 	// restore %rsp
 	movq PROC_REGS(%r11), %r10      // move current sandbox stack pointer to r10
@@ -46,6 +61,14 @@ userpop:
 	movq {{.lib}}_last_callback_invoked@gottpoff(%rip), %r11
 	movq %rax, %fs:(%r11)
 	get_ctx
+
+	movq 16(%r11), %rax
+	test %rax, %rax
+	jnz .cbtrampoline_stack_ok_entry
+	int3
+.cbtrampoline_stack_ok_entry:
+	movq $0, 16(%r11)
+
 	xchg 0(%r11), %rsp
 	pushq %r12              // save r12 to use as temp
 	movq 0(%r11), %r12      // move current sandbox stack pointer to r12
@@ -58,6 +81,13 @@ userpop:
 	callq *%r10
 	addq $0x10, %rsp
 	popq %r11
+
+	movq 16(%r11), %r10
+	test %r10, %r10
+	jz .cbtrampoline_stack_ok_exit
+	int3
+.cbtrampoline_stack_ok_exit:
+	movq $1, 16(%r11)
 
 	// restore %rsp
 	movq PROC_REGS(%r11), %r10      // move current sandbox stack pointer to r10
