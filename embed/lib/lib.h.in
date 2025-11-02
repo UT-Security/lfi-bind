@@ -4,7 +4,7 @@
 
 #include "lfi.h"
 
-extern "C" void {{ .lib }}_init(void*);
+extern "C" void {{ .lib }}_init(void*, void*);
 
 // {{ .lib }}_malloc allocates a heap object of size 'n' inside the sandbox.
 //

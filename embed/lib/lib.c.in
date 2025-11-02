@@ -94,7 +94,7 @@ err:
 }
 
 void
-{{ .lib }}_init(struct LFILibCalls* lfi_)
+{{ .lib }}_init(struct LFILibCalls* lfi_, bool (*on_sigaction)(int))
 {
     assert(lfi_);
     lfi = lfi_;
@@ -116,6 +116,7 @@ void
             .open = fsopen,
         },
         .verbose = false,
+        .on_sigaction = on_sigaction,
     });
 
     if (!tux) {
