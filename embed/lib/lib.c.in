@@ -101,7 +101,7 @@ void
 
     struct LFIPlatform* plat = lfi->lfi_new_plat((struct LFIPlatOptions) {
         .pagesize = getpagesize(),
-        .vmsize = 256UL * 1024 * 1024 * 1024,
+        .vmsize = 128UL * 1024 * 1024 * 1024,
     });
     if (!plat) {
         fprintf(stderr, "sobox: error loading LFI: %s\n", lfi->lfi_strerror());
