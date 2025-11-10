@@ -111,7 +111,7 @@ func main() {
 		}
 	}
 
-	var stackinfo StackArgInfo
+	var stackinfo map[string]StackArgInfo
 
 	var exports []ExportInfo
 	if strings.HasSuffix(lib, ".a") {
@@ -143,7 +143,7 @@ func main() {
 		exposed = append(exposed, strings.Split(*exposeFlag, ",")...)
 	}
 
-	dir := WriteFiles(*dir, *libname, "embed/stub", exports, exposed, objmap, stackinfo.Args)
+	dir := WriteFiles(*dir, *libname, "embed/stub", exports, exposed, objmap, stackinfo)
 
 	if *genStub {
 		os.Exit(0)
@@ -165,7 +165,7 @@ func main() {
 		*out = *libname + filepath.Ext(lib)
 	}
 
-	WriteFiles(dir, *libname, "embed/lib", exports, exposed, objmap, stackinfo.Args)
+	WriteFiles(dir, *libname, "embed/lib", exports, exposed, objmap, stackinfo)
 
 	if *genLib != "" {
 		return

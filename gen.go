@@ -42,7 +42,7 @@ func ident(s string) string {
 	return rgx.ReplaceAllString(s, "__")
 }
 
-func GenFile(path string, lib string, exported []ExportInfo, exposed []string, filemap map[string]string, stackargs map[string][]StackArg, w io.Writer) {
+func GenFile(path string, lib string, exported []ExportInfo, exposed []string, filemap map[string]string, stackargs map[string]StackArgInfo, w io.Writer) {
 	files := maps.Keys(filemap)
 	sort.Strings(files)
 
@@ -64,16 +64,16 @@ func GenFile(path string, lib string, exported []ExportInfo, exposed []string, f
 			return ""
 		},
 		"has_stack_args": func(s string) bool {
-			if len(stackargs[s]) != 0 {
+			if len(stackargs[s].Args) != 0 {
 				fmt.Println(s)
 			}
-			return len(stackargs[s]) != 0
+			return len(stackargs[s].Args) != 0
 		},
 	})
 }
 
 // uses a temp directory if dir is ""
-func WriteFiles(dir, lib string, subdir string, exported []ExportInfo, exposed []string, filemap map[string]string, stackargs map[string][]StackArg) string {
+func WriteFiles(dir, lib string, subdir string, exported []ExportInfo, exposed []string, filemap map[string]string, stackargs map[string]StackArgInfo) string {
 	if dir == "" {
 		var err error
 		dir, err = os.MkdirTemp("", "lfibind-*")

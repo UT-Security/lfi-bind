@@ -20,11 +20,16 @@ _lfi_pause:
 	mov $60, %rax
 	syscall
 	int3
+
+.section ".text.trusted"
 .p2align 5
 .global _lfi_retfn
 _lfi_retfn:
-	// special runtime call for invoking lfi_ret
-	//lfi:rtcall_return
+.bundle_lock
+	leaq 1024f(%rip), %r11
+	jmpq *24(%r14)
+	1024:
+.bundle_unlock
 	int3
 
 .section ".data.trampotable"

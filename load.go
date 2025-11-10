@@ -78,15 +78,21 @@ func ObjGetExports(file *elf.File, es map[string]bool) []ExportInfo {
 	return exports
 }
 
-func DynamicGetExports(dynlib *os.File, es map[string]bool) ([]ExportInfo, StackArgInfo) {
+func DynamicGetExports(dynlib *os.File, es map[string]bool) ([]ExportInfo, map[string]StackArgInfo) {
 	f, err := elf.NewFile(dynlib)
 	if err != nil {
 		fatal(err)
 	}
-	return ObjGetExports(f, es), ObjGetStackArgs(f, es)
+
+	stackArgs, ok := ObjGetStackArgs(f, es)
+	if !ok {
+		fatal(err)
+	}
+	
+	return ObjGetExports(f, es), stackArgs
 }
 
-func StaticGetExports(staticlib *os.File, es map[string]bool) ([]ExportInfo, StackArgInfo) {
+func StaticGetExports(staticlib *os.File, es map[string]bool) ([]ExportInfo, map[string]StackArgInfo) {
 	r, err := ar.NewReader(staticlib)
 	if err != nil {
 		fatal(err)
@@ -108,13 +114,12 @@ func StaticGetExports(staticlib *os.File, es map[string]bool) ([]ExportInfo, Sta
 		}
 		exports = append(exports, ObjGetExports(ef, es)...)
 	}
-	return exports, StackArgInfo{}
+	return exports, nil
 }
 
 type StackArgInfo struct {
-	Fn   uint64
 	Sret uint32
-	Args map[string][]StackArg
+	Args []StackArg
 }
 
 type StackArg struct {
@@ -122,10 +127,10 @@ type StackArg struct {
 	Size   uint32
 }
 
-func ObjGetStackArgs(file *elf.File, es map[string]bool) StackArgInfo {
+func ObjGetStackArgs(file *elf.File, es map[string]bool) (map[string]StackArgInfo, bool) {
 	sec := file.Section(".stack_args")
 	if sec == nil {
-		return StackArgInfo{}
+		return nil, false
 	}
 
 	syms, err := file.Symbols()
@@ -137,35 +142,34 @@ func ObjGetStackArgs(file *elf.File, es map[string]bool) StackArgInfo {
 		symtab[sym.Value] = sym.Name
 	}
 
-	info := StackArgInfo{
-		Args: make(map[string][]StackArg),
-	}
+	info := make(map[string]StackArgInfo)
 
-	b := make([]byte, 8)
+	b64 := make([]byte, 8)
+	b32 := make([]byte, 4)
 	idx := uint64(0)
 	for idx < sec.Size {
-		sec.ReadAt(b, int64(idx))
+		sec.ReadAt(b64, int64(idx))
 		idx += 8
-		info.Fn = binary.LittleEndian.Uint64(b)
+		fn := binary.LittleEndian.Uint64(b64)
 
-		sec.ReadAt(b, int64(idx))
+		sec.ReadAt(b32, int64(idx))
 		idx += 4
-		info.Sret = binary.LittleEndian.Uint32(b)
+		sret := binary.LittleEndian.Uint32(b32)
 
-		sec.ReadAt(b, int64(idx))
+		sec.ReadAt(b32, int64(idx))
 		idx += 4
-		entries := binary.LittleEndian.Uint32(b)
+		entries := binary.LittleEndian.Uint32(b32)
 
 		var args []StackArg
 		for i := uint32(0); i < entries; i++ {
 			// stack offset
-			sec.ReadAt(b, int64(idx))
+			sec.ReadAt(b32, int64(idx))
 			idx += 4
-			offset := binary.LittleEndian.Uint32(b)
+			offset := binary.LittleEndian.Uint32(b32)
 			// size
-			sec.ReadAt(b, int64(idx))
+			sec.ReadAt(b32, int64(idx))
 			idx += 4
-			size := binary.LittleEndian.Uint32(b)
+			size := binary.LittleEndian.Uint32(b32)
 
 			args = append(args, StackArg{
 				Offset: offset,
@@ -173,9 +177,12 @@ func ObjGetStackArgs(file *elf.File, es map[string]bool) StackArgInfo {
 			})
 		}
 
-		sym := symtab[info.Fn]
-		info.Args[sym] = args
+		sym := symtab[fn]
+		info[sym] = StackArgInfo{
+			Sret: sret,
+			Args: args,
+		}
 	}
 
-	return info
+	return info, true
 }
