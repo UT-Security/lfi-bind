@@ -50,7 +50,7 @@ cbinit(struct LFIContext* ctx)
     struct HostFile* hf = lfi->lfi_host_fdopen(fd);
     assert(hf);
     // Share the mapping inside the sandbox as read/exec.
-    lfiptr_t boxmap = lfi->lfi_as_mapany(lfi->lfi_ctx_as(ctx), size, PROT_READ | PROT_EXEC, MAP_SHARED, hf, 0);
+    lfiptr_t boxmap = lfi->lfi_as_mapany_no_verify(lfi->lfi_ctx_as(ctx), size, PROT_READ | PROT_EXEC, MAP_SHARED, hf, 0);
     if (boxmap == (lfiptr_t) -1)
         goto err1;
     cbentries_box = (struct CallbackEntry*) boxmap;
